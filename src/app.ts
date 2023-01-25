@@ -4,7 +4,7 @@ import express, { Request, Response, NextFunction } from "express";
 import config from "config";
 import morgan from "morgan";
 import cors from "cors";
-import { notFound } from "./middlewares";
+import { notFound, validate } from "./middlewares";
 import { AppDataSource } from "./utils/data-source";
 import validateEnv from "./utils/validate-env";
 import redisClient from "./utils/connect-redis";
@@ -36,9 +36,10 @@ AppDataSource.initialize()
     );
 
     // ROUTES
-    app.use("/playlist", playlistRoutes);
-    app.use("/singers", singerRoutes);
-    app.use("/genres", genresRoutes);
+    // app.use("/api/playlist", validate(getPlaylistSchema), playlistRoutes);
+    app.use("/api/playlist", playlistRoutes);
+    app.use("/api/singers", singerRoutes);
+    app.use("/api/genres", genresRoutes);
 
     // HEALTH CHECKER
     app.get("/api/healthchecker", async (_, res: Response) => {

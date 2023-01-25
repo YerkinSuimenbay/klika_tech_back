@@ -1,9 +1,36 @@
-import { getPlaylist } from "./../controllers/playlist.controller";
 import express from "express";
+import { check } from "express-validator";
+import {
+  getPlaylist,
+  getSinglePlaylist,
+} from "./../controllers/playlist.controller";
+import {
+  orderSanitizer,
+  paginationSanitizer,
+  playlistFilterSanitizer,
+  sortSanitizer,
+} from "../middlewares/sanitizers";
 
 const router = express.Router();
 
-router.route("/").get(getPlaylist);
+router
+  .route("/")
+  .get(
+    [
+      ...paginationSanitizer,
+      sortSanitizer,
+      orderSanitizer,
+      ...playlistFilterSanitizer,
+    ],
+    getPlaylist
+  );
+
+router
+  .route("/:id")
+  .get(
+    [...paginationSanitizer, check("id").isInt().toInt()],
+    getSinglePlaylist
+  );
 
 // router
 //   .route("/:postId")

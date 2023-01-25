@@ -1,75 +1,127 @@
+import { PlaylistSort } from "./../enums/sort.enum";
 import { Genre } from "./../entities/genre.entity";
 import { AppDataSource } from "../utils/data-source";
 import { NextFunction, Request, Response } from "express";
 import { Singer, Song } from "../entities";
-import { FindOptionsWhere } from "typeorm";
+import { FindOptionsOrder, FindOptionsWhere } from "typeorm";
+import { validationResult } from "express-validator";
+import { Order } from "../enums";
+import { getPlaylistSql } from "./get-playlist.sql";
 
 const songRepository = AppDataSource.getRepository(Song);
 
 export async function getPlaylist(
-  request: Request,
-  response: Response,
+  req: Request,
+  res: Response,
   next: NextFunction
 ) {
-  const { singerId, genreId, year } = request.params;
-  //   const where: FindOptionsWhere<Song> = {};
-  if (singerId) {
-    // where.singerId = singerId
-  }
+  console.log("PARAMS:", req.params, "QUERIES: ", req.query);
+
+  let {
+    limit,
+    offset,
+    sort,
+    order,
+    singer: singer_id,
+    genre: genre_id,
+    year,
+  } = req.query;
 
   try {
-    const [songs, total] = await songRepository.findAndCount({
-      relations: ["singer", "genre"],
-      where: {},
-    });
+    let sql = `${getPlaylistSql}
+      SELECT singer, song, genre, year 
+      FROM playlist
+    `;
 
-    return response.status(200).json({ total, playlist: songs });
+    let sqlCount = `${getPlaylistSql}
+      SELECT COUNT(*)::INTEGER AS total FROM playlist
+    `;
+
+    let where: "WHERE" | "AND" = "WHERE";
+    if (singer_id) {
+      const whereClause = ` ${where} singer_id = :singer_id`;
+      sql += whereClause;
+      sqlCount += whereClause;
+      where = "AND";
+    }
+    if (genre_id) {
+      const whereClause = ` ${where} genre_id = :genre_id`;
+      sql += whereClause;
+      sqlCount += whereClause;
+      where = "AND";
+    }
+    if (year) {
+      const whereClause = ` ${where} year = :year`;
+      sql += whereClause;
+      sqlCount += whereClause;
+    }
+
+    if (sort) {
+      // TODO: implement multiple sort
+      sql += `
+        ORDER BY ${sort} ${order || Order.ASC}
+      `;
+    }
+
+    sql += `
+      LIMIT :limit OFFSET :offset
+    `;
+
+    const parametersAsObject = {
+      limit,
+      offset,
+      singer_id,
+      genre_id,
+      year,
+    };
+
+    const [query, parameters] = AppDataSource.driver.escapeQueryWithParameters(
+      sql,
+      parametersAsObject,
+      {}
+    );
+    const [queryCount, parametersCount] =
+      AppDataSource.driver.escapeQueryWithParameters(
+        sqlCount,
+        parametersAsObject,
+        {}
+      );
+
+    const playlist: {
+      singer: string;
+      song: string;
+      genre: string;
+      year: number;
+    }[] = await AppDataSource.query(query, parameters);
+    const countResult = await AppDataSource.query(queryCount, parametersCount);
+
+    return res.status(200).json({ total: countResult[0].total, playlist });
   } catch (error) {
     console.log(error);
     next(error);
   }
 }
 
-// export class PlaylistController {
-//   private singerRepository = AppDataSource.getRepository(Singer);
-//   private songRepository = AppDataSource.getRepository(Song);
-//   private genreRepository = AppDataSource.getRepository(Genre);
+export async function getSinglePlaylist(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const id = req.params.id as unknown as number;
+  console.log("PARAMS:", req.params);
 
-//   constructor() {
-//     console.log("CHECKKKK", this);
-//   }
+  try {
+    const song = await songRepository.findOne({
+      relations: ["singer", "genre"],
+      where: { id },
+    });
 
-//   async all(request: Request, response: Response, next: NextFunction) {
-//     const { singerId, genreId, year } = request.params;
-//     console.log("TESTED", this);
-//     // const where: FindOptionsWhere<Song> = {};
-//     if (singerId) {
-//       // where.singerId = singerId
-//     }
-
-//     try {
-//       return this.songRepository.find({
-//         relations: ["singer", "genre"],
-//         where: {},
-//       });
-//     } catch (error) {
-//       console.log(error);
-//       response.status(500).json({ message: "Something went wrong!" });
-//     }
-//   }
-
-//   async one(request: Request, response: Response, next: NextFunction) {
-//     const id = parseInt(request.params.id);
-
-//     const user = await this.songRepository.findOne({
-//       where: { id },
-//     });
-
-//     if (!user) {
-//       return "unregistered user";
-//     }
-//     return user;
-//   }
+    return res.status(200).json({ playlist: song });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
 
 //   async save(request: Request, response: Response, next: NextFunction) {
 //     const { firstName, lastName, age } = request.body;
