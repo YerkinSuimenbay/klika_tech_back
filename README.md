@@ -14,9 +14,18 @@
 - `migration:run`
 - `yarn start`
 
-# Migration commands
+The server will be available on port 8000: `http://localhost:8000`
+Routes available:
 
-yarn migration:generate ./src/migrations/MIGRATION_NAME
-yarn migration:create ./src/migrations/MIGRATION_NAME
-yarn migration:run
-yarn migration:revert
+- /api/healthchecker
+- /api/playlist
+- /api/singers
+- /api/genres
+- /api/songs/years
+
+**Migration commands**
+
+- yarn migration:generate ./src/migrations/MIGRATION_NAME
+- yarn migration:create ./src/migrations/MIGRATION_NAME
+- yarn migration:run
+- yarn migration:revert
