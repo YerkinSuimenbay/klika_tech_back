@@ -10,9 +10,11 @@ Steps to run this project:
 - start them locally and set the DB env variables accordingly OR
 - if you have docker installed, then pull the images and start containers by running `docker compose up -d` (or `docker-compose up -d`)
 
-Once the DBs are up and running, proceed with the app setup:
+3. Once the DBs are up and running, proceed with the app setup. Run following commands:
 
-3. Run `yarn` command 2. Run `migration:run` command 3. Run `yarn start` command
+- `yarn`
+- `migration:run`
+- `yarn start`
 
 # Migration commands
 
