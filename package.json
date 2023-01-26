@@ -29,7 +29,7 @@
   },
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only --exit-child src/app.ts",
-    "build": "yarn migration:run tsc -p .",
+    "build": "yarn migration:run && tsc -p .",
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "yarn typeorm migration:generate -d ./src/utils/data-source.ts",
     "migration:create": "yarn typeorm migration:create",
