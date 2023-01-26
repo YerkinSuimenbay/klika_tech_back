@@ -1,6 +1,4 @@
-# Awesome Project Build with TypeORM
-
-Steps to run this project:
+### Steps to run this project:
 
 1. Copy `example.env` file, paste it in the root, and rename it to `.env`
 
