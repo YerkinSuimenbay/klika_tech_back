@@ -1,6 +1,8 @@
+require("dotenv").config();
+import config from "config";
 import { createClient } from "redis";
 
-const redisUrl = "redis://localhost:63799";
+const redisUrl = config.get<string>("redisUrl");
 
 const redisClient = createClient({
   url: redisUrl,

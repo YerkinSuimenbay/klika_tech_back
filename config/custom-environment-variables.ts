@@ -8,4 +8,5 @@ export default {
     database: "POSTGRES_DB",
   },
   redisCacheExpiresIn: "REDIS_CACHE_EXPIRES_IN_SEC",
+  redisUrl: "REDIS_URL",
 };
