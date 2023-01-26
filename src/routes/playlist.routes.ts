@@ -1,9 +1,8 @@
 import express from "express";
 import { check } from "express-validator";
-import {
-  getPlaylist,
-  getSinglePlaylist,
-} from "./../controllers/playlist.controller";
+import { getPlaylist, getSinglePlaylist } from "../controllers";
+import { getPlaylistCache } from "../middlewares/caches";
+
 import {
   orderSanitizer,
   paginationSanitizer,
@@ -22,6 +21,7 @@ router
       orderSanitizer,
       ...playlistFilterSanitizer,
     ],
+    getPlaylistCache,
     getPlaylist
   );
 

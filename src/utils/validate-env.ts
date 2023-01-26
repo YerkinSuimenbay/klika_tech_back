@@ -1,4 +1,4 @@
-import { cleanEnv, port, str } from "envalid";
+import { cleanEnv, num, port, str } from "envalid";
 
 const validateEnv = () => {
   cleanEnv(process.env, {
@@ -9,10 +9,7 @@ const validateEnv = () => {
     POSTGRES_USER: str(),
     POSTGRES_PASSWORD: str(),
     POSTGRES_DB: str(),
-    // JWT_ACCESS_TOKEN_PRIVATE_KEY: str(),
-    // JWT_ACCESS_TOKEN_PUBLIC_KEY: str(),
-    // JWT_REFRESH_TOKEN_PRIVATE_KEY: str(),
-    // JWT_REFRESH_TOKEN_PUBLIC_KEY: str(),
+    REDIS_CACHE_EXPIRES_IN_SEC: num(),
   });
 };
 

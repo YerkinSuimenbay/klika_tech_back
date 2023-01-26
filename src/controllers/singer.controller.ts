@@ -11,18 +11,29 @@ export async function getSingers(
   next: NextFunction
 ) {
   console.log("QUERY:", req.query);
-  const { search = "" } = req.query;
+  const { search = "", genre: genre_id, year } = req.query;
 
-  const where: FindOptionsWhere<Singer> = {};
+  const qb = singerRepository.createQueryBuilder("singer");
+
+  if (genre_id || year) {
+    qb.leftJoin("singer.songs", "song").leftJoin("song.genre", "genre");
+
+    if (genre_id) {
+      qb.andWhere("genre.id = :genre_id", { genre_id });
+    }
+    if (year) {
+      qb.andWhere("song.year = :year", { year });
+    }
+  }
+
   if (search) {
-    where.name = ILike(`%${(search as string).toLowerCase()}%`);
+    qb.andWhere("singer.name ILIKE :search", {
+      search: `%${(search as string).toLowerCase()}%`,
+    });
   }
 
   try {
-    const [singers, total] = await singerRepository.findAndCount({
-      relations: ["songs"],
-      where,
-    });
+    const [singers, total] = await qb.getManyAndCount();
 
     return res.status(200).json({ total, list: singers });
   } catch (error) {

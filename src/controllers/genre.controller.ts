@@ -11,14 +11,23 @@ export async function getGenres(
   next: NextFunction
 ) {
   console.log("QUERY:", req.query);
-  const { search = "", singer: singer_id } = req.query;
+  const { search = "", singer: singer_id, year } = req.query;
 
   const qb = genreRepository.createQueryBuilder("genre");
 
-  if (singer_id) {
-    qb.leftJoin(Song, "song", "song.genre_id = genre.id")
-      .leftJoin(Singer, "singer", "song.singer_id = singer.id")
-      .andWhere("singer.id = :singer_id", { singer_id });
+  if (singer_id || year) {
+    qb.leftJoin(Song, "song", "song.genre_id = genre.id").leftJoin(
+      Singer,
+      "singer",
+      "song.singer_id = singer.id"
+    );
+
+    if (singer_id) {
+      qb.andWhere("singer.id = :singer_id", { singer_id });
+    }
+    if (year) {
+      qb.andWhere("song.year = :year", { year });
+    }
   }
 
   if (search) {

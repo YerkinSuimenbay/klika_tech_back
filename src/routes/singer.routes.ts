@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  getSingers,
-  getSingleSinger,
-} from "./../controllers/singer.controller";
+import { getSingers, getSingleSinger } from "../controllers";
 
 const router = express.Router();
 

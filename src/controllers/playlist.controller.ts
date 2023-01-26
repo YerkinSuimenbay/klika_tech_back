@@ -1,12 +1,11 @@
-import { PlaylistSort } from "./../enums/sort.enum";
-import { Genre } from "./../entities/genre.entity";
+require("dotenv").config();
 import { AppDataSource } from "../utils/data-source";
 import { NextFunction, Request, Response } from "express";
-import { Singer, Song } from "../entities";
-import { FindOptionsOrder, FindOptionsWhere } from "typeorm";
-import { validationResult } from "express-validator";
+import { Song } from "../entities";
 import { Order } from "../enums";
-import { getPlaylistSql } from "./get-playlist.sql";
+import { getPlaylistSql } from "./sql";
+import redisClient from "../utils/connect-redis";
+import config from "config";
 
 const songRepository = AppDataSource.getRepository(Song);
 
@@ -34,7 +33,8 @@ export async function getPlaylist(
     `;
 
     let sqlCount = `${getPlaylistSql}
-      SELECT COUNT(*)::INTEGER AS total FROM playlist
+      SELECT COUNT(*)::INTEGER AS total 
+      FROM playlist
     `;
 
     let where: "WHERE" | "AND" = "WHERE";
@@ -51,6 +51,7 @@ export async function getPlaylist(
       where = "AND";
     }
     if (year) {
+      console.log({ year });
       const whereClause = ` ${where} year = :year`;
       sql += whereClause;
       sqlCount += whereClause;
@@ -95,7 +96,20 @@ export async function getPlaylist(
     }[] = await AppDataSource.query(query, parameters);
     const countResult = await AppDataSource.query(queryCount, parametersCount);
 
-    return res.status(200).json({ total: countResult[0].total, playlist });
+    const result = { total: countResult[0].total, playlist };
+
+    // REDIS CACHE
+    const redisKey = "getPlaylist:" + JSON.stringify(req.query);
+    const redisValue = JSON.stringify(result);
+    await redisClient.set(redisKey, redisValue, {
+      EX: parseInt(config.get<string>("redisCacheExpiresIn"), 10),
+      NX: true,
+    });
+
+    console.log("CACHING...");
+    console.log("REDIS KEY: ", redisKey);
+
+    return res.status(200).json(result);
   } catch (error) {
     console.log(error);
     next(error);

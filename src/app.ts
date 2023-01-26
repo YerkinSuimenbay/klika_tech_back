@@ -1,21 +1,22 @@
 import { errorHandler } from "./middlewares/error-handler";
 require("dotenv").config();
-import express, { Request, Response, NextFunction } from "express";
+import express, { Response } from "express";
 import config from "config";
 import morgan from "morgan";
 import cors from "cors";
-import { notFound, validate } from "./middlewares";
+import { notFound } from "./middlewares";
 import { AppDataSource } from "./utils/data-source";
 import validateEnv from "./utils/validate-env";
 import redisClient from "./utils/connect-redis";
 import playlistRoutes from "./routes/playlist.routes";
 import singerRoutes from "./routes/singer.routes";
+import songRoutes from "./routes/song.routes";
 import genresRoutes from "./routes/genre.routes";
 
 AppDataSource.initialize()
   .then(async () => {
     // VALIDATE ENV
-    validateEnv();
+    const res = validateEnv();
 
     const app = express();
 
@@ -28,17 +29,12 @@ AppDataSource.initialize()
     if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
     // 3. Cors
-    app.use(
-      cors({
-        // origin: config.get<string>("origin"),
-        // credentials: true,
-      })
-    );
+    app.use(cors());
 
     // ROUTES
-    // app.use("/api/playlist", validate(getPlaylistSchema), playlistRoutes);
     app.use("/api/playlist", playlistRoutes);
     app.use("/api/singers", singerRoutes);
+    app.use("/api/songs", songRoutes);
     app.use("/api/genres", genresRoutes);
 
     // HEALTH CHECKER
